@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Soundboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #111;
+    font-family: 'Arial Black', Arial, sans-serif;
+    min-height: 100vh;
+    padding: 8px;
+  }
+  h1 {
+    text-align: center;
+    color: #fff;
+    font-size: 0.95rem;
+    margin-bottom: 3px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .category-label {
+    text-align: center;
+    color: #888;
+    font-size: 0.52rem;
+    margin-bottom: 7px;
+    letter-spacing: 1px;
+  }
+  .section-title {
+    color: #aaa;
+    font-size: 0.48rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 7px auto 3px auto;
+    max-width: 500px;
+    border-left: 2px solid #444;
+    padding-left: 5px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .btn {
+    border: 3px solid rgba(0,0,0,0.4);
+    border-radius: 10px;
+    padding: 6px 4px;
+    cursor: pointer;
+    text-align: center;
+    text-transform: uppercase;
+    user-select: none;
+    color: #000;
+    min-height: 62px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: transform 0.07s, filter 0.07s, box-shadow 0.07s;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+  }
+  .btn:active, .btn.pressed {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.4);
+    filter: brightness(0.85);
+  }
+  .btn.playing {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.4) !important;
+    outline: 2px solid #fff;
+    filter: brightness(1.1);
+  }
+  .btn .dur {
+    font-size: 0.58rem;
+    font-weight: 900;
+    opacity: 0.85;
+    line-height: 1;
+  }
+  .btn .lbl {
+    font-size: 0.52rem;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    line-height: 1.25;
+  }
+
+  .green   { background: #22c55e; border-color: #15803d; }
+  .red     { background: #ef4444; border-color: #991b1b; }
+  .yellow  { background: #facc15; border-color: #a16207; }
+  .blue    { background: #38bdf8; border-color: #0369a1; }
+  .orange  { background: #f97316; border-color: #c2410c; }
+  .purple  { background: #a855f7; border-color: #6b21a8; }
+  .pink    { background: #f472b6; border-color: #9d174d; }
+  .teal    { background: #2dd4bf; border-color: #0f766e; }
+  .lime    { background: #a3e635; border-color: #4d7c0f; }
+  .rose    { background: #fb7185; border-color: #9f1239; }
+  .indigo  { background: #818cf8; border-color: #3730a3; }
+  .amber   { background: #fbbf24; border-color: #92400e; }
+  .cyan    { background: #22d3ee; border-color: #0e7490; }
+  .violet  { background: #c084fc; border-color: #581c87; }
+  .sky     { background: #7dd3fc; border-color: #0c4a6e; }
+  .emerald { background: #34d399; border-color: #065f46; }
+
+  .now-playing {
+    text-align: center;
+    color: #facc15;
+    font-size: 0.62rem;
+    margin: 8px auto 0;
+    min-height: 15px;
+    letter-spacing: 1px;
+    font-weight: bold;
+    max-width: 500px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎵 Soundboard</h1>
+<div class="category-label">80 বাটন — ক্লিক করে ট্র্যাক চালাও</div>
+
+<div id="app"></div>
+<div class="now-playing" id="nowPlaying">— কোনো ট্র্যাক চালু নেই —</div>
+<video id="player" style="display:none;"></video>
+
+<script>
+const sections = [
+  { title: "🥁 DRUMS & PERCUSSION", buttons: [
+    { label: "DRUMS KICK", color: "green" },{ label: "DRUMS SNARE", color: "green" },
+    { label: "DRUMS HI HATS", color: "green" },{ label: "DRUMS CRASH", color: "green" },
+    { label: "RIDE CYMBAL", color: "green" },{ label: "TOM HIGH", color: "green" },
+    { label: "TOM MID", color: "green" },{ label: "TOM LOW", color: "green" },
+    { label: "FLOOR TOM", color: "green" },{ label: "COWBELL", color: "green" },
+    { label: "CLAP", color: "green" },{ label: "SHAKER", color: "green" },
+  ]},
+  { title: "🎸 GUITAR", buttons: [
+    { label: "GUITAR ACOUSTIC", color: "red" },{ label: "GUITAR ELECTRIC", color: "red" },
+    { label: "GUITAR MUTED", color: "red" },{ label: "GUITAR POWER CHORD", color: "red" },
+    { label: "ARPEGGIO", color: "red" },{ label: "FUNK RIFF", color: "red" },
+    { label: "BLUES LICK", color: "red" },{ label: "DIST SOLO", color: "red" },
+  ]},
+  { title: "🎹 KEYS & SYNTH", buttons: [
+    { label: "PIANO", color: "yellow" },{ label: "PIANO CHORD", color: "yellow" },
+    { label: "ELECTRIC PIANO", color: "yellow" },{ label: "ORGAN", color: "yellow" },
+    { label: "SYNTH PAD", color: "purple" },{ label: "SYNTH LEAD", color: "purple" },
+    { label: "SYNTH BASS", color: "purple" },{ label: "ARP SYNTH", color: "purple" },
+  ]},
+  { title: "🎺 BRASS & WINDS", buttons: [
+    { label: "TRUMPET", color: "orange" },{ label: "SAXOPHONE", color: "orange" },
+    { label: "TROMBONE", color: "orange" },{ label: "FLUTE", color: "teal" },
+    { label: "CLARINET", color: "teal" },{ label: "OBOE", color: "teal" },
+  ]},
+  { title: "🎻 STRINGS", buttons: [
+    { label: "VIOLINS", color: "indigo" },{ label: "CELLO", color: "indigo" },
+    { label: "VIOLA", color: "indigo" },{ label: "DOUBLE BASS", color: "indigo" },
+    { label: "HARP", color: "sky" },{ label: "STRING STAB", color: "sky" },
+  ]},
+  { title: "🪘 WORLD / DESI", buttons: [
+    { label: "TABLA", color: "teal" },{ label: "DHOL", color: "teal" },
+    { label: "HARMONIUM", color: "amber" },{ label: "SITAR", color: "amber" },
+    { label: "BANSURI", color: "emerald" },{ label: "SAROD", color: "emerald" },
+    { label: "MRIDANGAM", color: "teal" },{ label: "DARBUKA", color: "amber" },
+  ]},
+  { title: "🎤 VOCAL FX", buttons: [
+    { label: "OH YEAH", color: "pink" },{ label: "HEY!", color: "pink" },
+    { label: "AIR HORN", color: "rose" },{ label: "CROWD CHEER", color: "rose" },
+    { label: "WOAH", color: "pink" },{ label: "LAUGHTER", color: "pink" },
+  ]},
+  { title: "🔊 FX & LOOPS", buttons: [
+    { label: "VINYL SCRATCH", color: "violet" },{ label: "SUB DROP", color: "violet" },
+    { label: "RISER FX", color: "violet" },{ label: "SWEEP", color: "violet" },
+    { label: "NOISE HIT", color: "violet" },{ label: "REVERSE CYM", color: "violet" },
+    { label: "WHOOSH", color: "cyan" },{ label: "LASER", color: "cyan" },
+  ]},
+  { title: "🎵 SONGS", buttons: [
+    { label: "SONG 1", color: "blue" },{ label: "SONG 2", color: "blue" },
+    { label: "SONG 3", color: "orange" },{ label: "SONG 4", color: "orange" },
+    { label: "SONG 5", color: "blue" },{ label: "SONG 6", color: "blue" },
+    { label: "SONG 7", color: "lime" },{ label: "SONG 8", color: "lime" },
+    { label: "SONG 9", color: "orange" },{ label: "SONG 10", color: "orange" },
+    { label: "SONG 11", color: "lime" },{ label: "SONG 12", color: "lime" },
+  ]},
+];
+
+const app = document.getElementById('app');
+const player = document.getElementById('player');
+const nowPlaying = document.getElementById('nowPlaying');
+let currentBtn = null;
+let globalIndex = 1;
+
+sections.forEach(sec => {
+  const title = document.createElement('div');
+  title.className = 'section-title';
+  title.textContent = sec.title;
+  app.appendChild(title);
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+
+  sec.buttons.forEach(b => {
+    const num = globalIndex++;
+    const div = document.createElement('div');
+    div.className = `btn ${b.color}`;
+    div.id = `btn${num}`;
+    div.innerHTML = `<span class="dur" id="dur${num}">--:--</span><span class="lbl">${b.label}</span>`;
+    div.addEventListener('click', () => playTrack(num, div, b.label));
+    grid.appendChild(div);
+  });
+
+  app.appendChild(grid);
+});
+
+function playTrack(num, btn, label) {
+  if (currentBtn && currentBtn !== btn) {
+    currentBtn.classList.remove('playing');
+  }
+  if (player.dataset.current === String(num) && !player.paused) {
+    player.pause(); player.currentTime = 0;
+    btn.classList.remove('playing');
+    currentBtn = null;
+    nowPlaying.textContent = '— কোনো ট্র্যাক চালু নেই —';
+    return;
+  }
+  player.src = `${num}.mp4`;
+  player.load();
+  player.play().catch(() => { nowPlaying.textContent = `⚠️ ${num}.mp4 ফাইল পাওয়া যায়নি`; });
+  player.dataset.current = num;
+  currentBtn = btn;
+  btn.classList.add('playing');
+  nowPlaying.textContent = `▶ চালু: ${label} (${num}.mp4)`;
+  player.onloadedmetadata = () => {
+    const el = document.getElementById(`dur${num}`);
+    if (el) el.textContent = fmtTime(player.duration);
+  };
+  player.onended = () => {
+    btn.classList.remove('playing');
+    nowPlaying.textContent = '— শেষ হয়েছে —';
+    currentBtn = null;
+  };
+}
+
+function fmtTime(s) {
+  if (isNaN(s)) return '--:--';
+  return `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+}
+</script>
+</body>
+</html>
